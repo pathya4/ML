@@ -1,0 +1,99 @@
+import numpy as np
+import random
+
+# Define the maze environment as a grid
+maze = np.array([
+    [0, 0, 0, 1],
+    [1, 0, 1, 0],
+    [0, 0, 0, 0],
+    [0, 1, 1, 0],
+    [0, 0, 0, 0]
+])
+
+print("The element of the above maze represents a state, here there are total 20 states ")
+print("1 -> WAY | 2 -> WALL")
+print('''
+  States (Grid Indices):
+  [ 0,  1,  2,  3 ]
+  [ 4,  5,  6,  7 ]
+  [ 8,  9, 10, 11 ]
+  [12, 13, 14, 15 ]
+  [16, 17, 18, 19 ]
+''')
+
+n_rows, n_cols = maze.shape
+n_states = n_rows * n_cols
+n_actions = 4
+
+start_state = int(input("Enter the start state (e.g., 0): "))
+goal_state = int(input("Enter the goal state (e.g., 19): "))
+
+
+q_table = np.zeros((n_states, n_actions))
+
+
+print("Cols -> Actions [ UP, DOWN, LEFT, RIGHT ] ")
+print("Rows -> Number of states, here 20")
+print(q_table)
+
+learning_rate = 0.1
+discount_factor = 0.9
+epsilon = 0.8
+n_episodes = 1000
+
+
+actions = ["up", "down", "left", "right"]
+
+
+def reward(state):
+    return 10 if state == goal_state else -1
+
+
+def next_state(state, action):
+    row, col = divmod(state, n_cols)
+    if action == 0 and row > 0 and maze[row - 1, col] == 0:  # Move up
+        row -= 1
+    elif action == 1 and row < n_rows - 1 and maze[row + 1, col] == 0:  # Move down
+        row += 1
+    elif action == 2 and col > 0 and maze[row, col - 1] == 0:  # Move left
+        col -= 1
+    elif action == 3 and col < n_cols - 1 and maze[row, col + 1] == 0:  # Move right
+        col += 1
+    return row * n_cols + col
+
+for episode in range(n_episodes):
+    state = start_state
+
+    while state != goal_state:
+        if random.uniform(0, 1) < epsilon:
+            action = random.randint(0, n_actions - 1)  # Explore
+        else:
+            action = np.argmax(q_table[state])  # Exploit
+
+        new_state = next_state(state, action)
+        r = reward(new_state)
+
+        
+        q_table[state, action] += learning_rate * (r + discount_factor * np.max(q_table[new_state]) - q_table[state, action])
+
+        state = new_state
+        
+        
+print("Trained Q-Table:")
+print(q_table)
+
+
+def get_optimal_path():
+    state = start_state
+    path = [state]
+
+    while state != goal_state:
+        action = np.argmax(q_table[state])
+        state = next_state(state, action)
+        path.append(state)
+
+    return path
+
+optimal_path = get_optimal_path()
+print("Optimal path from start to goal:", optimal_path)
+
