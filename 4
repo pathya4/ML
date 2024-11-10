@@ -1,0 +1,47 @@
+import pandas as pd
+import numpy as np
+import matplotlib.pyplot as plt
+from sklearn.cluster import KMeans
+from sklearn.preprocessing import StandardScaler
+from sklearn.metrics import silhouette_score
+
+
+import warnings
+warnings.filterwarnings("ignore")
+
+iris_data = pd.read_csv('/Users/prathamesh/Downloads/Iris (1).csv')
+print(iris_data.head())
+
+iris_features = iris_data.drop(columns=['Species'])
+
+scaler = StandardScaler()
+iris_scaled = scaler.fit_transform(iris_features)
+print(iris_scaled[:5])
+
+
+sse = []
+k_range = range(1, 11)
+
+for k in k_range:
+    kmeans = KMeans(n_clusters=k, random_state=42)
+    kmeans.fit(iris_scaled)
+    sse.append(kmeans.inertia_)
+
+plt.figure(figsize=(8, 5))
+plt.plot(k_range, sse, marker='o', linestyle='--')
+plt.title('Elbow Method for Optimal k')
+plt.xlabel('Number of clusters (k)')
+plt.ylabel('Sum of Squared Errors (SSE)')
+plt.show()
+
+kmeans = KMeans(n_clusters=3, random_state=42)
+kmeans.fit(iris_scaled)
+
+iris_data['Cluster'] = kmeans.labels_
+print(iris_data.head())
+
+print("Cluster Centers:")
+print(kmeans.cluster_centers_)
+
+silhouette_avg = silhouette_score(iris_scaled, kmeans.labels_)
+print(f'Silhouette Score for {kmeans.n_clusters} clusters: {silhouette_avg}')
